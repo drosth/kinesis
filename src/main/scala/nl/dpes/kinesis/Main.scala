@@ -1,37 +1,24 @@
 package nl.dpes.kinesis
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
-import com.amazonaws.regions.{Region, Regions, RegionUtils}
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration
-import com.gilt.gfc.aws.kinesis.client.{KCLConfiguration, KinesisClientEndpoints, KinesisPublisher}
+import nl.dpes.kinesis.config.{AmazonKinesisConfig, Configuration, KinesisConsumerConfig, KinesisProducerConfig}
+
+import com.gilt.gfc.aws.kinesis.client.KinesisPublisher
 import scala.concurrent.duration._
 
-object Main extends App {
-  val region: Region = RegionUtils.getRegion(Regions.EU_WEST_1.getName)
+object Kinesis extends App with Configuration
+    with KinesisConsumerConfig
+    with KinesisProducerConfig
+    with AmazonKinesisConfig
+{
 
-  val endpointConfiguration: EndpointConfiguration = new EndpointConfiguration("arn:aws:kinesis:eu-west-1:674201978047:stream", "eu-west-1")
+  AmazonKinesisUtils.listStreamNames().foreach(name=>println(s"Known stream name: '$name'"))
+  AmazonKinesisUtils.validateStream(streamName)
 
-  val publisher: KinesisPublisher = KinesisPublisher(
-    maxErrorRetryCount = 10
-    , threadPoolSize = 8
-    , awsCredentialsProvider = new DefaultAWSCredentialsProviderChain()
-    , awsRegion = Some(region)
-  )
+  // ------------------------
 
-  lazy val kinesisClientEndpoints: KinesisClientEndpoints = KinesisClientEndpoints("", "arn:aws:kinesis:eu-west-1:674201978047:stream")
+  Await.result(producer.writeToKinesis(streamName, Seq("Foo", "Bear")), 20 seconds)
 
-  lazy val config: KinesisClientLibConfiguration = KCLConfiguration(
-    applicationName = "consumer-name",
-    streamName = "acc-domain",
-    endpointConfiguration = Some(kinesisClientEndpoints)
-  )
-
-
-  val consumer: ErasureRequestEventConsumer = new ErasureRequestEventConsumerImpl(config)
-
-  val producer: ErasureRequestEventProducer = new ErasureRequestEventProducerImpl(publisher)
-  Await.result(producer.writeToKinesis("acc-domain", Seq("Hello", "World")), 10 seconds)
+  consumer.readFromKinesis()
 }

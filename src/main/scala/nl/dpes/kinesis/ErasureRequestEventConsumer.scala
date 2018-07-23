@@ -4,7 +4,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration
-import com.gilt.gfc.aws.kinesis.client.{KCLConfiguration, KCLWorkerRunner, KinesisPublisher, KinesisPublisherBatchResult}
+import com.gilt.gfc.aws.kinesis.client.KCLWorkerRunner
 
 trait ErasureRequestEventConsumer {
 
@@ -12,8 +12,10 @@ trait ErasureRequestEventConsumer {
 }
 
 class ErasureRequestEventConsumerImpl(config: KinesisClientLibConfiguration) extends ErasureRequestEventConsumer {
-  import Implicits._
+
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  import Implicits._
 
   override def readFromKinesis(): Unit = {
 
