@@ -36,7 +36,8 @@ lazy val `privacyservice` = (project in file("."))
         "org.hamcrest" % "hamcrest-core" % "1.3" % Test,
         "ch.qos.logback" % "logback-classic" % "1.2.3",
 
-        "com.gilt" %% "gfc-aws-kinesis" % "0.17.0"
+        "com.gilt" %% "gfc-aws-kinesis" % "0.17.0",
+        "io.reactivex" %% "rxscala" % "0.26.5"
       ),
 
       javaOptions ++= Seq(
